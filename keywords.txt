@@ -1,0 +1,217 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# keywords.txt — Comprehensive Biomedical Query List
+# Format: one query per line, # = comment, blank lines ignored
+# Each query targets PubMed/PMC with MeSH terms for high recall
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── INFECTIOUS DISEASES ──────────────────────────────────────────────────────
+COVID-19[MeSH] AND treatment[Title/Abstract]
+SARS-CoV-2[MeSH] AND pathogenesis[Title/Abstract]
+influenza[MeSH] AND antiviral[Title/Abstract]
+tuberculosis[MeSH] AND drug resistance[Title/Abstract]
+HIV infections[MeSH] AND antiretroviral therapy[Title/Abstract]
+malaria[MeSH] AND prevention[Title/Abstract]
+sepsis[MeSH] AND management[Title/Abstract]
+pneumonia[MeSH] AND treatment[Title/Abstract]
+hepatitis B[MeSH] AND therapy[Title/Abstract]
+hepatitis C[MeSH] AND direct-acting antiviral[Title/Abstract]
+dengue[MeSH] AND clinical features[Title/Abstract]
+meningitis[MeSH] AND diagnosis[Title/Abstract]
+Lyme disease[MeSH] AND treatment[Title/Abstract]
+antimicrobial resistance[MeSH]
+nosocomial infections[MeSH] AND prevention[Title/Abstract]
+
+# ── ONCOLOGY ─────────────────────────────────────────────────────────────────
+breast cancer[MeSH] AND chemotherapy[Title/Abstract]
+lung cancer[MeSH] AND immunotherapy[Title/Abstract]
+colorectal cancer[MeSH] AND targeted therapy[Title/Abstract]
+prostate cancer[MeSH] AND hormone therapy[Title/Abstract]
+leukemia[MeSH] AND bone marrow transplant[Title/Abstract]
+lymphoma[MeSH] AND treatment[Title/Abstract]
+pancreatic cancer[MeSH] AND prognosis[Title/Abstract]
+melanoma[MeSH] AND immunotherapy[Title/Abstract]
+glioblastoma[MeSH] AND treatment[Title/Abstract]
+ovarian cancer[MeSH] AND BRCA[Title/Abstract]
+bladder cancer[MeSH] AND therapy[Title/Abstract]
+thyroid cancer[MeSH] AND surgery[Title/Abstract]
+hepatocellular carcinoma[MeSH] AND sorafenib[Title/Abstract]
+tumor microenvironment[MeSH]
+cancer biomarkers[MeSH] AND diagnosis[Title/Abstract]
+CAR T-cell therapy[Title/Abstract] AND cancer
+checkpoint inhibitors[Title/Abstract] AND tumor
+
+# ── CARDIOLOGY ───────────────────────────────────────────────────────────────
+myocardial infarction[MeSH] AND treatment[Title/Abstract]
+heart failure[MeSH] AND management[Title/Abstract]
+atrial fibrillation[MeSH] AND anticoagulation[Title/Abstract]
+hypertension[MeSH] AND drug therapy[Title/Abstract]
+coronary artery disease[MeSH] AND stenting[Title/Abstract]
+stroke[MeSH] AND thrombolysis[Title/Abstract]
+cardiac arrhythmia[MeSH] AND ablation[Title/Abstract]
+atherosclerosis[MeSH] AND pathogenesis[Title/Abstract]
+cardiomyopathy[MeSH] AND treatment[Title/Abstract]
+pulmonary hypertension[MeSH] AND therapy[Title/Abstract]
+heart transplantation[MeSH] AND outcomes[Title/Abstract]
+venous thromboembolism[MeSH] AND prevention[Title/Abstract]
+
+# ── NEUROLOGY & NEUROSCIENCE ─────────────────────────────────────────────────
+Alzheimer disease[MeSH] AND treatment[Title/Abstract]
+Parkinson disease[MeSH] AND levodopa[Title/Abstract]
+multiple sclerosis[MeSH] AND therapy[Title/Abstract]
+epilepsy[MeSH] AND antiepileptic drugs[Title/Abstract]
+migraine[MeSH] AND prophylaxis[Title/Abstract]
+traumatic brain injury[MeSH] AND rehabilitation[Title/Abstract]
+amyotrophic lateral sclerosis[MeSH] AND prognosis[Title/Abstract]
+spinal cord injury[MeSH] AND recovery[Title/Abstract]
+dementia[MeSH] AND cognitive decline[Title/Abstract]
+stroke rehabilitation[MeSH]
+neuropathic pain[MeSH] AND treatment[Title/Abstract]
+neuroinflammation[MeSH] AND mechanisms[Title/Abstract]
+blood-brain barrier[MeSH] AND drug delivery[Title/Abstract]
+
+# ── ENDOCRINOLOGY & METABOLISM ───────────────────────────────────────────────
+diabetes mellitus type 2[MeSH] AND insulin resistance[Title/Abstract]
+diabetes mellitus type 1[MeSH] AND immunotherapy[Title/Abstract]
+obesity[MeSH] AND metabolic syndrome[Title/Abstract]
+thyroid diseases[MeSH] AND treatment[Title/Abstract]
+osteoporosis[MeSH] AND bisphosphonates[Title/Abstract]
+polycystic ovary syndrome[MeSH] AND treatment[Title/Abstract]
+Cushing syndrome[MeSH] AND diagnosis[Title/Abstract]
+hypothyroidism[MeSH] AND levothyroxine[Title/Abstract]
+non-alcoholic fatty liver disease[MeSH] AND pathogenesis[Title/Abstract]
+metabolic syndrome[MeSH] AND cardiovascular risk[Title/Abstract]
+
+# ── RESPIRATORY ──────────────────────────────────────────────────────────────
+asthma[MeSH] AND corticosteroids[Title/Abstract]
+chronic obstructive pulmonary disease[MeSH] AND exacerbation[Title/Abstract]
+pulmonary fibrosis[MeSH] AND treatment[Title/Abstract]
+acute respiratory distress syndrome[MeSH] AND mechanical ventilation[Title/Abstract]
+sleep apnea[MeSH] AND CPAP[Title/Abstract]
+cystic fibrosis[MeSH] AND CFTR modulators[Title/Abstract]
+lung transplantation[MeSH] AND outcomes[Title/Abstract]
+respiratory syncytial virus[MeSH] AND treatment[Title/Abstract]
+
+# ── GASTROENTEROLOGY ─────────────────────────────────────────────────────────
+Crohn disease[MeSH] AND biologics[Title/Abstract]
+ulcerative colitis[MeSH] AND treatment[Title/Abstract]
+irritable bowel syndrome[MeSH] AND management[Title/Abstract]
+liver cirrhosis[MeSH] AND complications[Title/Abstract]
+gastrointestinal bleeding[MeSH] AND endoscopy[Title/Abstract]
+celiac disease[MeSH] AND gluten-free diet[Title/Abstract]
+gut microbiome[MeSH] AND disease[Title/Abstract]
+fecal microbiota transplantation[MeSH]
+gastroesophageal reflux disease[MeSH] AND proton pump inhibitors[Title/Abstract]
+
+# ── IMMUNOLOGY & RHEUMATOLOGY ────────────────────────────────────────────────
+rheumatoid arthritis[MeSH] AND biologics[Title/Abstract]
+systemic lupus erythematosus[MeSH] AND treatment[Title/Abstract]
+autoimmune diseases[MeSH] AND mechanisms[Title/Abstract]
+ankylosing spondylitis[MeSH] AND anti-TNF[Title/Abstract]
+psoriatic arthritis[MeSH] AND therapy[Title/Abstract]
+vasculitis[MeSH] AND immunosuppression[Title/Abstract]
+allergy[MeSH] AND immunotherapy[Title/Abstract]
+primary immunodeficiency[MeSH] AND treatment[Title/Abstract]
+cytokine storm[MeSH] AND management[Title/Abstract]
+T cell[MeSH] AND immune response[Title/Abstract]
+
+# ── NEPHROLOGY ───────────────────────────────────────────────────────────────
+chronic kidney disease[MeSH] AND progression[Title/Abstract]
+acute kidney injury[MeSH] AND biomarkers[Title/Abstract]
+hemodialysis[MeSH] AND outcomes[Title/Abstract]
+kidney transplantation[MeSH] AND rejection[Title/Abstract]
+glomerulonephritis[MeSH] AND treatment[Title/Abstract]
+nephrotic syndrome[MeSH] AND management[Title/Abstract]
+
+# ── PSYCHIATRY & MENTAL HEALTH ───────────────────────────────────────────────
+depression[MeSH] AND antidepressants[Title/Abstract]
+schizophrenia[MeSH] AND antipsychotics[Title/Abstract]
+bipolar disorder[MeSH] AND mood stabilizers[Title/Abstract]
+anxiety disorders[MeSH] AND cognitive behavioral therapy[Title/Abstract]
+post-traumatic stress disorder[MeSH] AND treatment[Title/Abstract]
+attention deficit disorder with hyperactivity[MeSH] AND treatment[Title/Abstract]
+autism spectrum disorder[MeSH] AND intervention[Title/Abstract]
+substance use disorder[MeSH] AND treatment[Title/Abstract]
+suicide[MeSH] AND prevention[Title/Abstract]
+
+# ── PEDIATRICS ───────────────────────────────────────────────────────────────
+pediatric asthma[MeSH] AND management[Title/Abstract]
+childhood obesity[MeSH] AND intervention[Title/Abstract]
+neonatal sepsis[MeSH] AND treatment[Title/Abstract]
+congenital heart disease[MeSH] AND surgery[Title/Abstract]
+childhood leukemia[MeSH] AND chemotherapy[Title/Abstract]
+vaccination[MeSH] AND immunization schedule[Title/Abstract]
+premature birth[MeSH] AND outcomes[Title/Abstract]
+pediatric epilepsy[MeSH] AND treatment[Title/Abstract]
+
+# ── SURGERY & ANESTHESIOLOGY ─────────────────────────────────────────────────
+laparoscopic surgery[MeSH] AND outcomes[Title/Abstract]
+robotic surgery[MeSH] AND complications[Title/Abstract]
+postoperative complications[MeSH] AND management[Title/Abstract]
+general anesthesia[MeSH] AND safety[Title/Abstract]
+pain management[MeSH] AND opioids[Title/Abstract]
+wound healing[MeSH] AND mechanisms[Title/Abstract]
+bariatric surgery[MeSH] AND weight loss[Title/Abstract]
+
+# ── GENETICS & GENOMICS ──────────────────────────────────────────────────────
+CRISPR-Cas9[MeSH] AND gene editing[Title/Abstract]
+genome-wide association studies[MeSH] AND disease[Title/Abstract]
+epigenetics[MeSH] AND cancer[Title/Abstract]
+gene therapy[MeSH] AND clinical trials[Title/Abstract]
+next generation sequencing[MeSH] AND diagnosis[Title/Abstract]
+pharmacogenomics[MeSH] AND drug response[Title/Abstract]
+rare genetic diseases[MeSH] AND treatment[Title/Abstract]
+microRNA[MeSH] AND disease[Title/Abstract]
+copy number variation[MeSH] AND disease[Title/Abstract]
+
+# ── PHARMACOLOGY & DRUG DEVELOPMENT ─────────────────────────────────────────
+drug resistance[MeSH] AND mechanisms[Title/Abstract]
+clinical trials[MeSH] AND randomized controlled[Title/Abstract]
+drug toxicity[MeSH] AND management[Title/Abstract]
+monoclonal antibodies[MeSH] AND therapy[Title/Abstract]
+nanoparticles[MeSH] AND drug delivery[Title/Abstract]
+mRNA vaccines[MeSH] AND efficacy[Title/Abstract]
+biosimilars[MeSH] AND clinical use[Title/Abstract]
+drug repurposing[Title/Abstract] AND disease
+adverse drug reactions[MeSH] AND reporting[Title/Abstract]
+
+# ── RADIOLOGY & IMAGING ──────────────────────────────────────────────────────
+magnetic resonance imaging[MeSH] AND diagnosis[Title/Abstract]
+computed tomography[MeSH] AND cancer detection[Title/Abstract]
+positron emission tomography[MeSH] AND oncology[Title/Abstract]
+ultrasound[MeSH] AND guided biopsy[Title/Abstract]
+radiotherapy[MeSH] AND tumor[Title/Abstract]
+
+# ── PUBLIC HEALTH & EPIDEMIOLOGY ─────────────────────────────────────────────
+epidemiology[MeSH] AND chronic disease[Title/Abstract]
+vaccination[MeSH] AND herd immunity[Title/Abstract]
+global health[MeSH] AND infectious disease[Title/Abstract]
+health disparities[MeSH] AND intervention[Title/Abstract]
+maternal mortality[MeSH] AND prevention[Title/Abstract]
+smoking cessation[MeSH] AND intervention[Title/Abstract]
+physical activity[MeSH] AND chronic disease prevention[Title/Abstract]
+nutrition[MeSH] AND disease prevention[Title/Abstract]
+
+# ── DERMATOLOGY ──────────────────────────────────────────────────────────────
+psoriasis[MeSH] AND biologics[Title/Abstract]
+atopic dermatitis[MeSH] AND treatment[Title/Abstract]
+skin cancer[MeSH] AND surgery[Title/Abstract]
+acne vulgaris[MeSH] AND treatment[Title/Abstract]
+wound care[MeSH] AND chronic wounds[Title/Abstract]
+
+# ── OPHTHALMOLOGY ────────────────────────────────────────────────────────────
+diabetic retinopathy[MeSH] AND anti-VEGF[Title/Abstract]
+glaucoma[MeSH] AND intraocular pressure[Title/Abstract]
+age-related macular degeneration[MeSH] AND treatment[Title/Abstract]
+cataract[MeSH] AND phacoemulsification[Title/Abstract]
+
+# ── STEM CELLS & REGENERATIVE MEDICINE ──────────────────────────────────────
+stem cell therapy[MeSH] AND clinical trials[Title/Abstract]
+induced pluripotent stem cells[MeSH] AND disease modeling[Title/Abstract]
+tissue engineering[MeSH] AND scaffold[Title/Abstract]
+regenerative medicine[MeSH] AND wound healing[Title/Abstract]
+
+# ── PAIN & PALLIATIVE CARE ───────────────────────────────────────────────────
+chronic pain[MeSH] AND management[Title/Abstract]
+palliative care[MeSH] AND quality of life[Title/Abstract]
+opioid use disorder[MeSH] AND treatment[Title/Abstract]
+cancer pain[MeSH] AND opioids[Title/Abstract]

@@ -1,107 +1,130 @@
-# 🧠 BioMed-Simplify-Dataset
+# Medical Abstract & Paragraph Collector
 
-A curated biomedical text collection built for **medical NLP research**, focusing on:
-
-- Medical text simplification
-- Summarization
-- Named Entity Recognition (NER)
-- Biomedical language modeling
-
-This repository aggregates high-quality open-access biomedical corpora from major scientific sources such as PubMed Central, PubMed, BioNLP corpora, and Europe PMC.
+A modular Python toolkit for collecting biomedical text from **PubMed**, **PubMed Central (PMC)**, and **Europe PMC** — ready for NLP training (summarization, simplification, NER, etc.).
 
 ---
 
-## 📊 Dataset Sources
+## Project Structure
 
-### 🧪 1. PubMed Central (PMC)
-- 🔗 https://www.ncbi.nlm.nih.gov/pmc/
-- Full-text biomedical research articles
-- Includes abstracts + full papers
-- Open-access (CC BY license where applicable)
-
-**Use cases:**
-- Text simplification
-- Summarization
-- Medical NLP pretraining
-- Information extraction
-
----
-
-### 📄 2. PubMed / MEDLINE Abstracts
-- 🔗 https://pubmed.ncbi.nlm.nih.gov/
-- Millions of structured biomedical abstracts
-- Accessible via Entrez API
-
-**Use cases:**
-- Sentence simplification
-- Classification
-- Readability modeling
-- Large-scale language modeling
+```
+medical_collector/
+├── config.py               ← Central settings (email, API key, paths)
+├── utils.py                ← Shared helpers (retry, cleaning, saving)
+├── pubmed_collector.py     ← PubMed abstracts via Entrez
+├── pmc_collector.py        ← PMC full-text paragraphs via Entrez XML
+├── europepmc_collector.py  ← Europe PMC abstracts + full text via REST API
+├── pipeline.py             ← Master pipeline (all sources → merged dataset)
+└── requirements.txt
+```
 
 ---
 
-### 🧬 3. BioNLP Shared Task Corpora
-- 🔗 http://2013.bionlp-st.org/
-- Curated biomedical NLP datasets
-- Includes annotated corpora such as:
-  - NCBI Disease Corpus
-  - GENIA Corpus
-  - BioCreative datasets
+## Quick Start
 
-**Use cases:**
-- Named Entity Recognition (NER)
-- Relation extraction
-- Event extraction
+### 1. Install dependencies
+```bash
+pip install -r requirements.txt
+```
 
----
+### 2. Set your NCBI email (required by NCBI)
+Edit `config.py`:
+```python
+ENTREZ_EMAIL = "your_email@example.com"
+```
+Or use environment variables:
+```bash
+export ENTREZ_EMAIL="your_email@example.com"
+export NCBI_API_KEY="your_optional_key"   # raises rate limit 3→10 req/s
+```
 
-### 📚 4. Europe PMC Annotated Corpus
-- 🔗 https://europepmc.org/
-- Full-text biomedical articles
-- Includes manual annotations:
-  - Genes
-  - Diseases
-  - Proteins
-
-**Use cases:**
-- Biomedical entity recognition
-- Structured text understanding
-- Multi-task NLP training
+### 3. Run the full pipeline
+```bash
+python pipeline.py --query "diabetes mellitus" --pubmed-max 300 --pmc-max 30 --europepmc-max 100
+```
 
 ---
 
-## 🎯 Project Goal
+## Individual Collectors
 
-This repository aims to build a unified dataset for:
+### PubMed Abstracts
+```bash
+python pubmed_collector.py --query "cancer immunotherapy[MeSH]" --max 500 --output all
+```
 
-> 🧠 **Medical Text Simplification and Biomedical NLP Research**
+### PMC Full-text Paragraphs
+```bash
+python pmc_collector.py --query "COVID-19 treatment" --max 30 --output all
+```
 
-The goal is to transform complex biomedical literature into:
-- Simplified medical explanations
-- Patient-friendly text
-- Readable summaries
-
----
-
-## 🧰 Potential Applications
-
-- Medical text simplification models
-- LLM fine-tuning for healthcare
-- Clinical NLP pipelines
-- Biomedical summarization systems
-- Educational health AI tools
+### Europe PMC
+```bash
+python europepmc_collector.py --query "Alzheimer disease" --max 100 --output all
+```
 
 ---
 
-## ⚙️ Data Format (planned)
+## Output Files
 
-Data will be structured as:
+All outputs go to `output/` (configurable in `config.py`):
+
+| File | Description |
+|---|---|
+| `merged/all_records.json` | Full metadata + paragraphs (JSON) |
+| `merged/all_records.csv` | Flat CSV (paragraphs joined with `\|\|`) |
+| `merged/corpus.txt` | **One paragraph per line** — ready for LM training |
+| `merged/stats.json` | Collection statistics |
+| `pubmed/pubmed_abstracts.*` | PubMed-only outputs |
+| `pmc/pmc_articles.*` | PMC-only outputs |
+| `europepmc/europepmc_articles.*` | Europe PMC-only outputs |
+
+---
+
+## Record Schema
 
 ```json
 {
-  "source": "PubMed Central",
-  "title": "",
-  "abstract": "",
-  "full_text": "",
-  "annotation_text": ""
+  "pmid": "12345678",
+  "pmcid": "PMC1234567",
+  "doi": "10.1000/xyz123",
+  "title": "Effect of metformin on ...",
+  "abstract": "Background: ... Methods: ... Results: ...",
+  "journal": "The Lancet",
+  "year": "2023",
+  "authors": "Smith J; Doe A",
+  "keywords": "diabetes; metformin; glycemia",
+  "paragraphs": ["Paragraph 1 text...", "Paragraph 2 text..."],
+  "source": "PMC"
 }
+```
+
+---
+
+## Use as a Python Module
+
+```python
+from pubmed_collector import PubMedCollector
+from pmc_collector import PMCCollector
+from europepmc_collector import EuropePMCCollector
+
+# PubMed abstracts
+pm = PubMedCollector()
+records = pm.collect(query="stroke rehabilitation", max_results=100)
+
+# PMC full text paragraphs
+pmc = PMCCollector()
+articles = pmc.collect(query="BRCA1 mutation", max_results=20)
+all_paras = [p for a in articles for p in a["paragraphs"]]
+
+# Europe PMC
+epmc = EuropePMCCollector()
+results = epmc.collect(query="COVID-19 vaccine efficacy", max_results=50)
+```
+
+---
+
+## Tips
+
+- **Rate limits**: NCBI allows 3 requests/sec without an API key, 10/sec with one. Get a free key at https://www.ncbi.nlm.nih.gov/account/
+- **PMC max**: Keep `--pmc-max` ≤ 50 per run to avoid timeouts on large XML files.
+- **Paragraph quality**: Minimum paragraph length is set in `config.py` (`PMC_MIN_PARAGRAPH_LEN`, etc.).
+- **Open access only**: Europe PMC full-text fetching is restricted to open-access articles automatically.
