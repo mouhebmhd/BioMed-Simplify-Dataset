@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+
+# Data files — keep only .txt
+output/
+*.json
+*.csv
+*.tsv
+*.xml
+*.parquet
+*.pkl
+*.zip
+*.gz
+*.tar
+
+# Keep keywords.txt explicitly
+!keywords.txt
+
+# OS
+.DS_Store
+Thumbs.db
