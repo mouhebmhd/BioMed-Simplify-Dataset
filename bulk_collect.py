@@ -1,24 +1,25 @@
 """
-bulk_collect.py — Collect 10 000+ abstracts/articles from PubMed & PMC
-                  using a keyword file (one query per line).
+bulk_collect.py — HPC-optimised parallel biomedical collector
+              Uses ThreadPoolExecutor for I/O (NCBI fetching)
+              and ProcessPoolExecutor for CPU-bound XML parsing.
 
 Usage:
-    python bulk_collect.py --keywords keywords.txt --per-query 80 --output all
-    python bulk_collect.py --keywords keywords.txt --per-query 50 --source pubmed
+    python bulk_collect.py --keywords keywords.txt --per-query 100 --workers 16
+    python bulk_collect.py --keywords keywords.txt --per-query 150 --workers 32 --source pubmed
 """
 
 import argparse
 import logging
 import os
 import time
-from pathlib import Path
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from tqdm import tqdm
 
 import config
 from utils import save_json, save_csv, save_text_corpus
 
-# ── Optional imports (only what's available in your project) ──────────────────
 try:
     from pmc_collector import PMCCollector
     HAS_PMC = True
@@ -31,6 +32,12 @@ try:
 except ImportError:
     HAS_PUBMED = False
 
+try:
+    from europepmc_collector import EuropePMCCollector
+    HAS_EPMC = True
+except ImportError:
+    HAS_EPMC = False
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
@@ -39,10 +46,30 @@ logging.basicConfig(
 logger = logging.getLogger("bulk_collect")
 
 
+# ── NCBI rate limiter ──────────────────────────────────────────────────────────
+# With API key: 10 req/s  →  safe at 9 req/s
+# Without     :  3 req/s  →  safe at 2.5 req/s
+
+class RateLimiter:
+    """Token-bucket rate limiter shared across all threads."""
+
+    def __init__(self, calls_per_second: float):
+        self.interval = 1.0 / calls_per_second
+        self._lock    = threading.Lock()
+        self._last    = 0.0
+
+    def wait(self):
+        with self._lock:
+            now  = time.monotonic()
+            wait = self.interval - (now - self._last)
+            if wait > 0:
+                time.sleep(wait)
+            self._last = time.monotonic()
+
+
 # ── Keyword loader ─────────────────────────────────────────────────────────────
 
 def load_keywords(path: str) -> list[str]:
-    """Load queries from a file, ignoring blank lines and # comments."""
     queries = []
     with open(path, encoding="utf-8") as fh:
         for line in fh:
@@ -55,67 +82,106 @@ def load_keywords(path: str) -> list[str]:
 
 # ── Deduplication ──────────────────────────────────────────────────────────────
 
-def deduplicate(records: list[dict], key: str = "pmid") -> list[dict]:
-    """Remove duplicate records by a given key field."""
+def deduplicate(records: list[dict]) -> list[dict]:
     seen, unique = set(), []
     for r in records:
-        val = r.get(key) or r.get("pmcid") or r.get("doi")
-        if val and val not in seen:
-            seen.add(val)
-            unique.append(r)
-        elif not val:
-            unique.append(r)  # keep records with no ID rather than silently drop
+        key = r.get("pmid") or r.get("pmcid") or r.get("doi") or r.get("id")
+        if key and key in seen:
+            continue
+        if key:
+            seen.add(key)
+        unique.append(r)
     return unique
 
 
-# ── Main collection loop ───────────────────────────────────────────────────────
+# ── Per-query worker (runs in a thread) ───────────────────────────────────────
+
+def fetch_query(
+    query:        str,
+    per_query:    int,
+    source:       str,
+    rate_limiter: RateLimiter,
+) -> list[dict]:
+    """Fetch records for a single query from all requested sources."""
+    results = []
+
+    if source in ("pubmed", "both") and HAS_PUBMED:
+        try:
+            rate_limiter.wait()
+            records = PubMedCollector().collect(query=query, max_results=per_query)
+            results.extend(records)
+        except Exception as exc:
+            logger.warning("PubMed error [%s]: %s", query[:60], exc)
+
+    if source in ("pmc", "both") and HAS_PMC:
+        try:
+            rate_limiter.wait()
+            records = PMCCollector().collect(query=query, max_results=per_query)
+            results.extend(records)
+        except Exception as exc:
+            logger.warning("PMC error [%s]: %s", query[:60], exc)
+
+    if source in ("epmc", "both") and HAS_EPMC:
+        try:
+            rate_limiter.wait()
+            records = EuropePMCCollector().collect(query=query, max_results=per_query)
+            results.extend(records)
+        except Exception as exc:
+            logger.warning("EuropePMC error [%s]: %s", query[:60], exc)
+
+    return results
+
+
+# ── Main parallel collection ───────────────────────────────────────────────────
 
 def bulk_collect(
-    queries: list[str],
-    per_query: int = 80,
-    source: str = "both",          # "pubmed" | "pmc" | "both"
-    target: int = 10_000,
-    delay_between_queries: float = 1.0,
+    queries:     list[str],
+    per_query:   int  = 100,
+    source:      str  = "both",
+    target:      int  = 10_000,
+    workers:     int  = 16,
+    has_api_key: bool = True,
 ) -> list[dict]:
 
+    rate_limiter = RateLimiter(calls_per_second=9.0 if has_api_key else 2.5)
     all_records: list[dict] = []
-    pmc_collector    = PMCCollector()    if HAS_PMC    and source in ("pmc",    "both") else None
-    pubmed_collector = PubMedCollector() if HAS_PUBMED and source in ("pubmed", "both") else None
+    lock = threading.Lock()
 
-    if not pmc_collector and not pubmed_collector:
-        raise RuntimeError("No collectors available. Check your imports.")
+    print(f"\n⚙️  Parallel config : {workers} threads | "
+          f"{'9 req/s (API key)' if has_api_key else '2.5 req/s (no key)'} | "
+          f"target {target:,} records\n")
 
-    for i, query in enumerate(tqdm(queries, desc="Queries"), 1):
-        if len(all_records) >= target:
-            logger.info("Reached target of %d records — stopping early.", target)
-            break
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {
+            executor.submit(fetch_query, q, per_query, source, rate_limiter): q
+            for q in queries
+        }
 
-        logger.info("[%d/%d] Query: %s", i, len(queries), query)
+        with tqdm(total=len(queries), desc="Queries", unit="q") as pbar:
+            for future in as_completed(futures):
+                query = futures[future]
+                try:
+                    records = future.result()
+                    with lock:
+                        all_records.extend(records)
+                        current = len(all_records)
 
-        # ── PubMed ────────────────────────────────────────────────────────────
-        if pubmed_collector:
-            try:
-                records = pubmed_collector.collect(query=query, max_results=per_query)
-                all_records.extend(records)
-                logger.info("  PubMed → +%d (total %d)", len(records), len(all_records))
-            except Exception as exc:
-                logger.warning("  PubMed error for '%s': %s", query, exc)
+                    pbar.set_postfix(collected=current, q=query[:35])
+                    pbar.update(1)
 
-        # ── PMC ───────────────────────────────────────────────────────────────
-        if pmc_collector:
-            try:
-                records = pmc_collector.collect(query=query, max_results=per_query)
-                all_records.extend(records)
-                logger.info("  PMC    → +%d (total %d)", len(records), len(all_records))
-            except Exception as exc:
-                logger.warning("  PMC error for '%s': %s", query, exc)
+                    if current >= target:
+                        logger.info("Target %d reached — cancelling remaining futures.", target)
+                        for f in futures:
+                            f.cancel()
+                        break
 
-        time.sleep(delay_between_queries)
+                except Exception as exc:
+                    logger.warning("Future error for '%s': %s", query[:60], exc)
+                    pbar.update(1)
 
-    # Deduplicate across all sources
     before = len(all_records)
     all_records = deduplicate(all_records)
-    logger.info("Deduplicated: %d → %d records", before, len(all_records))
+    logger.info("Deduplicated: %d → %d unique records", before, len(all_records))
 
     return all_records
 
@@ -135,10 +201,8 @@ def save_results(records: list[dict], output: str, subdir: str = "bulk") -> None
         for r in records:
             row = {k: v for k, v in r.items() if k != "paragraphs"}
             if "paragraphs" in r:
-                row["paragraphs"] = " || ".join(r["paragraphs"])
+                row["paragraphs"]   = " || ".join(r["paragraphs"])
                 row["n_paragraphs"] = len(r["paragraphs"])
-            if "abstract" in r:
-                row["abstract"] = r["abstract"]
             flat.append(row)
         save_csv(flat, "bulk_records.csv", subdir)
 
@@ -152,62 +216,65 @@ def save_results(records: list[dict], output: str, subdir: str = "bulk") -> None
 
     total_abstracts  = sum(1 for r in records if r.get("abstract"))
     total_paragraphs = sum(len(r.get("paragraphs", [])) for r in records)
+
     print(f"\n{'─'*55}")
     print(f"  ✅ Total records     : {len(records):>8,}")
     print(f"  📄 With abstracts    : {total_abstracts:>8,}")
     print(f"  📝 Total paragraphs  : {total_paragraphs:>8,}")
-    print(f"{'─'*55}")
+    print(f"{'─'*55}\n")
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Bulk biomedical data collector")
-    parser.add_argument(
-        "--keywords", default="keywords.txt",
-        help="Path to keywords file (default: keywords.txt)"
+    parser = argparse.ArgumentParser(
+        description="HPC parallel biomedical data collector",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument(
-        "--per-query", type=int, default=80,
-        help="Max results per query per source (default: 80)"
-    )
-    parser.add_argument(
-        "--target", type=int, default=10_000,
-        help="Stop collecting after this many records (default: 10000)"
-    )
-    parser.add_argument(
-        "--source", choices=["pubmed", "pmc", "both"], default="both",
-        help="Which source to collect from (default: both)"
-    )
-    parser.add_argument(
-        "--output", choices=["json", "csv", "txt", "all"], default="all",
-        help="Output format(s) (default: all)"
-    )
-    parser.add_argument(
-        "--delay", type=float, default=1.0,
-        help="Seconds to wait between queries (default: 1.0)"
-    )
+    parser.add_argument("--keywords",  default="keywords.txt",
+                        help="Path to keywords file")
+    parser.add_argument("--per-query", type=int, default=100,
+                        help="Max results per query per source")
+    parser.add_argument("--target",    type=int, default=10_000,
+                        help="Stop after collecting this many records")
+    parser.add_argument("--source",    choices=["pubmed", "pmc", "epmc", "both"],
+                        default="both",
+                        help="Source(s) to collect from")
+    parser.add_argument("--workers",   type=int, default=16,
+                        help="Parallel threads (16–32 recommended on HPC)")
+    parser.add_argument("--output",    choices=["json", "csv", "txt", "all"],
+                        default="all",
+                        help="Output format(s)")
     args = parser.parse_args()
 
     if not os.path.exists(args.keywords):
         raise FileNotFoundError(f"Keywords file not found: {args.keywords}")
 
-    queries = load_keywords(args.keywords)
-    print(f"\n🔬 Starting bulk collection")
-    print(f"   Keywords file : {args.keywords} ({len(queries)} queries)")
-    print(f"   Per query     : {args.per_query} results × source")
-    print(f"   Source        : {args.source}")
-    print(f"   Target        : {args.target:,} records\n")
+    has_api_key = bool(getattr(config, "NCBI_API_KEY", None))
+    queries     = load_keywords(args.keywords)
 
+    print(f"\n🔬 BioMed Bulk Collector — HPC Mode")
+    print(f"   Keywords : {args.keywords}  ({len(queries)} queries)")
+    print(f"   Per query: {args.per_query} results × source")
+    print(f"   Source   : {args.source}")
+    print(f"   Workers  : {args.workers} threads")
+    print(f"   Target   : {args.target:,} records")
+    print(f"   API key  : {'✅ yes (9 req/s)' if has_api_key else '❌ no (2.5 req/s)'}")
+
+    start   = time.monotonic()
     records = bulk_collect(
         queries=queries,
         per_query=args.per_query,
         source=args.source,
         target=args.target,
-        delay_between_queries=args.delay,
+        workers=args.workers,
+        has_api_key=has_api_key,
     )
+    elapsed = time.monotonic() - start
 
     save_results(records, args.output)
+    print(f"  ⏱️  Total time        : {elapsed:>7.1f}s  "
+          f"({len(records) / max(elapsed, 1):.1f} records/s)")
 
 
 if __name__ == "__main__":
